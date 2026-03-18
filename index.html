@@ -2,111 +2,160 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Dokunma Oyunu</title>
+<title>Oyun Değiştirme Sistemi</title>
 <style>
-  body {
-    margin: 0;
-    background: url("WhatsApp Image 2026-03-18 at 13.50.32.jpeg");
-    background-size: cover;
-    background-position: center;
-    color: white;
-    font-family: Arial, sans-serif;
-    display: flex;
-    height: 100vh;
-    overflow: hidden;
-  }
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  overflow: hidden;
+}
 
-  #menu {
-    width: 150px;
-    background: rgba(0,0,0,0.6);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-  }
+/* Oyun alanı */
+#gameArea {
+  width: 100%;
+  height: 100vh;
+  position: relative;
+  background: url("WhatsApp Image 2026-03-18 at 13.50.32.jpeg");
+  background-size: cover;
+  background-position: center;
+}
 
-  button {
-    padding: 10px 20px;
-    font-size: 18px;
-    cursor: pointer;
-  }
+/* Sağ üst butonlar */
+#gameButtons {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 100;
+}
 
-  #gameArea {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-  }
+#gameButtons button {
+  margin-left: 5px;
+  padding: 8px 12px;
+  font-size: 16px;
+  cursor: pointer;
+}
 
-  #score, #time, #record {
-    font-size: 28px;
-    margin: 10px;
-    text-shadow: 1px 1px 5px black;
-  }
+/* Dokunma oyunu */
+#tapGame {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top:0; left:0;
+}
 
-  #message {
-    font-size: 24px;
-    margin-top: 20px;
-    color: lime;
-    text-shadow: 1px 1px 5px black;
-  }
+#tapGame #score, #tapGame #time, #tapGame #record {
+  font-size: 28px;
+  margin: 10px;
+  text-shadow: 1px 1px 5px black;
+  color: white;
+}
 
-  .smallImage {
-    position: absolute;
-    width: 60px;
-    height: auto;
-    border-radius: 5px;
-    pointer-events: none;
-    z-index: 10;
-    opacity: 0;
-    animation: fadeInOut 0.5s forwards;
-  }
+#tapGame #message {
+  font-size: 24px;
+  margin-top: 20px;
+  color: lime;
+  text-shadow: 1px 1px 5px black;
+}
 
-  @keyframes fadeInOut {
-    0% {opacity: 0;}
-    20% {opacity: 1;}
-    80% {opacity: 1;}
-    100% {opacity: 0;}
-  }
+.smallImage {
+  position: absolute;
+  width: 60px;
+  height: auto;
+  border-radius: 5px;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0;
+  animation: fadeInOut 0.5s forwards;
+}
+
+@keyframes fadeInOut {
+  0% {opacity: 0;}
+  20% {opacity: 1;}
+  80% {opacity: 1;}
+  100% {opacity: 0;}
+}
+
+/* Sayı tahmini oyunu */
+#numberGame {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top:0; left:0;
+  display: none;
+  background: url("WhatsApp Image 2026-03-18 at 13.50.32.jpeg");
+  background-size: cover;
+  background-position: center;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+#numberGame input {
+  padding: 10px;
+  font-size: 20px;
+  width: 100px;
+  text-align: center;
+}
+
+#numberGame button {
+  padding: 8px 16px;
+  font-size: 18px;
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+#numberGame #ngMessage {
+  margin-top: 20px;
+  font-size: 24px;
+  color: yellow;
+  text-shadow: 1px 1px 5px black;
+}
 </style>
 </head>
 <body>
 
-<div id="menu">
-  <div>Oyun Süresi</div>
-  <button onclick="setTime(10)">10s</button>
-  <button onclick="setTime(20)">20s</button>
-  <button onclick="setTime(30)">30s</button>
-</div>
-
 <div id="gameArea">
-  <div id="score">Skor: 0</div>
-  <div id="time">Süre: 10</div>
-  <div id="record">Rekor: 0</div>
-  <div id="message"></div>
-</div>
 
-<!-- Tıklama sesi -->
-<audio id="clickSound" src="universfield-playful-failure-310480 (1).mp3"></audio>
+  <!-- Sağ üst oyun seçimi -->
+  <div id="gameButtons">
+    <button onclick="showTapGame()">Dokunma Oyunu</button>
+    <button onclick="showNumberGame()">Sayı Tahmin Oyunu</button>
+  </div>
+
+  <!-- Dokunma Oyunu -->
+  <div id="tapGame">
+    <div id="score">Skor: 0</div>
+    <div id="time">Süre: 10</div>
+    <div id="record">Rekor: 0</div>
+    <div id="message"></div>
+    <audio id="clickSound" src="universfield-playful-failure-310480 (1).mp3"></audio>
+  </div>
+
+  <!-- Sayı Tahmin Oyunu -->
+  <div id="numberGame">
+    <div>Tahmininizi Girin (1-100):</div>
+    <input type="number" id="ngInput" min="1" max="100">
+    <button onclick="checkGuess()">Tahmin Et</button>
+    <div id="ngMessage"></div>
+  </div>
+
+</div>
 
 <script>
+// ================= Dokunma Oyunu ===================
 let score = 0;
 let time = 10;
 let timer;
 let isGameOver = false;
 let currentTimeSetting = 10;
-
 let clickSound = document.getElementById("clickSound");
 
-// Her süre için ayrı rekor key
 function getRecordKey(timeSetting) {
   return "tapRecord_" + timeSetting;
 }
 
-// Rekoru al
 function loadRecord() {
   let record = localStorage.getItem(getRecordKey(currentTimeSetting)) || 0;
   document.getElementById("record").innerText = "Rekor: " + record;
@@ -132,46 +181,30 @@ function endGame() {
   clearInterval(timer);
 }
 
-// Oyun tıklama
 function handleClick() {
-  if (isGameOver) {
-    startGame();
-    return;
-  }
-
-  // Skor artır
+  if (isGameOver) { startGame(); return; }
   score++;
   updateDisplay();
-
-  // Tıklama sesi
   clickSound.currentTime = 0;
   clickSound.play();
 
-  // Küçük rastgele resim
   let img = document.createElement("img");
   img.src = "WhatsApp Image 2026-03-18 at 16.48.01.jpeg";
   img.className = "smallImage";
-
-  const gameArea = document.getElementById("gameArea");
+  const gameArea = document.getElementById("tapGame");
   const maxX = gameArea.clientWidth - 60;
   const maxY = gameArea.clientHeight - 60;
   img.style.left = Math.random() * maxX + "px";
   img.style.top = Math.random() * maxY + "px";
-
   gameArea.appendChild(img);
-
   setTimeout(() => img.remove(), 500);
 }
 
 function startTimer() {
   clearInterval(timer);
   timer = setInterval(() => {
-    if (time > 0) {
-      time--;
-      updateDisplay();
-    } else {
-      endGame();
-    }
+    if (time > 0) { time--; updateDisplay(); }
+    else { endGame(); }
   }, 1000);
 }
 
@@ -179,27 +212,42 @@ function startGame() {
   score = 0;
   isGameOver = false;
   document.getElementById("message").innerText = "";
-  time = currentTimeSetting; // süreyi resetle
+  time = currentTimeSetting;
   updateDisplay();
   startTimer();
 }
 
-// Süre seçimi
-function setTime(t) {
-  currentTimeSetting = t;
-  time = t;
-  record = loadRecord();
+document.addEventListener("click", function(e){
+  if(document.getElementById("tapGame").style.display !== "none") handleClick();
+});
+
+// Başlangıçta otomatik başlat
+window.onload = () => { startGame(); };
+
+// ================= Sayı Tahmin Oyunu ===================
+let numberToGuess = Math.floor(Math.random() * 100) + 1;
+
+function showNumberGame() {
+  document.getElementById("tapGame").style.display = "none";
+  document.getElementById("numberGame").style.display = "flex";
+  document.getElementById("ngMessage").innerText = "";
+  document.getElementById("ngInput").value = "";
+  numberToGuess = Math.floor(Math.random() * 100) + 1;
+}
+
+function showTapGame() {
+  document.getElementById("numberGame").style.display = "none";
+  document.getElementById("tapGame").style.display = "block";
   startGame();
 }
 
-// Etkinlikler
-document.addEventListener("click", handleClick);
-document.addEventListener("touchstart", handleClick);
-
-// Sayfa açılır açılmaz oyunu başlat
-window.onload = () => {
-  startGame();
-};
+function checkGuess() {
+  const guess = parseInt(document.getElementById("ngInput").value);
+  const msg = document.getElementById("ngMessage");
+  if (guess < numberToGuess) msg.innerText = "Daha büyük!";
+  else if (guess > numberToGuess) msg.innerText = "Daha küçük!";
+  else msg.innerText = "Tebrikler, bildiniz!";
+}
 </script>
 
 </body>

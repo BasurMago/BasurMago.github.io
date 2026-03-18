@@ -78,6 +78,7 @@ let time = 10;
 let timer;
 let isGameOver = false;
 
+// Rekoru localStorage'dan al
 let record = localStorage.getItem("tapRecord") || 0;
 document.getElementById("record").innerText = "Rekor: " + record;
 
@@ -95,15 +96,12 @@ function endGame() {
     localStorage.setItem("tapRecord", record);
     updateDisplay();
   }
+  clearInterval(timer); // timer durdur
 }
 
 function handleClick() {
   if (isGameOver) {
-    score = 0;
-    isGameOver = false;
-    document.getElementById("message").innerText = "";
-    updateDisplay();
-    startTimer();
+    startGame();
     return;
   }
   score++;
@@ -111,21 +109,30 @@ function handleClick() {
 }
 
 function startTimer() {
+  clearInterval(timer);
   timer = setInterval(() => {
     if (time > 0) {
       time--;
       updateDisplay();
     } else {
-      clearInterval(timer);
       endGame();
     }
   }, 1000);
 }
 
+// Oyun başlat
+function startGame() {
+  score = 0;
+  isGameOver = false;
+  document.getElementById("message").innerText = "";
+  updateDisplay();
+  startTimer();
+}
+
 // Süre seçimi
 function setTime(t) {
   time = t;
-  updateDisplay();
+  startGame(); // süre değişince oyun sıfırlansın ve başlasın
 }
 
 // Etkinlikler

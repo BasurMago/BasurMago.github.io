@@ -179,10 +179,12 @@ function startGame() {
   score = 0;
   isGameOver = false;
   document.getElementById("message").innerText = "";
+  time = currentTimeSetting; // süreyi resetle
   updateDisplay();
   startTimer();
 }
 
+// Süre seçimi
 function setTime(t) {
   currentTimeSetting = t;
   time = t;
@@ -190,8 +192,14 @@ function setTime(t) {
   startGame();
 }
 
+// Etkinlikler
 document.addEventListener("click", handleClick);
 document.addEventListener("touchstart", handleClick);
+
+// Sayfa açılır açılmaz oyunu başlat
+window.onload = () => {
+  startGame();
+};
 </script>
 
 </body>

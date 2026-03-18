@@ -16,7 +16,6 @@
     overflow: hidden;
   }
 
-  /* Sol panel */
   #menu {
     width: 150px;
     background: rgba(0,0,0,0.6);
@@ -33,7 +32,6 @@
     cursor: pointer;
   }
 
-  /* Oyun alanı */
   #gameArea {
     flex: 1;
     display: flex;
@@ -56,7 +54,6 @@
     text-shadow: 1px 1px 5px black;
   }
 
-  /* Rastgele belirecek küçük resim */
   .smallImage {
     position: absolute;
     width: 60px;
@@ -64,6 +61,15 @@
     border-radius: 5px;
     pointer-events: none;
     z-index: 10;
+    opacity: 0;
+    animation: fadeInOut 0.5s forwards;
+  }
+
+  @keyframes fadeInOut {
+    0% {opacity: 0;}
+    20% {opacity: 1;}
+    80% {opacity: 1;}
+    100% {opacity: 0;}
   }
 </style>
 </head>
@@ -83,12 +89,17 @@
   <div id="message"></div>
 </div>
 
+<!-- Tıklama sesi -->
+<audio id="clickSound" src="universfield-playful-failure-310480 (1).mp3"></audio>
+
 <script>
 let score = 0;
 let time = 10;
 let timer;
 let isGameOver = false;
-let currentTimeSetting = 10; // Seçili süre
+let currentTimeSetting = 10;
+
+let clickSound = document.getElementById("clickSound");
 
 // Her süre için ayrı rekor key
 function getRecordKey(timeSetting) {
@@ -122,32 +133,34 @@ function endGame() {
 }
 
 // Oyun tıklama
-function handleClick(e) {
+function handleClick() {
   if (isGameOver) {
     startGame();
     return;
   }
+
+  // Skor artır
   score++;
   updateDisplay();
 
-  // Küçük rastgele resim oluştur
+  // Tıklama sesi
+  clickSound.currentTime = 0;
+  clickSound.play();
+
+  // Küçük rastgele resim
   let img = document.createElement("img");
   img.src = "WhatsApp Image 2026-03-18 at 16.48.01.jpeg";
   img.className = "smallImage";
 
-  // Rastgele pozisyon (gameArea içinde)
   const gameArea = document.getElementById("gameArea");
-  const maxX = gameArea.clientWidth - 60; // width of image
+  const maxX = gameArea.clientWidth - 60;
   const maxY = gameArea.clientHeight - 60;
   img.style.left = Math.random() * maxX + "px";
   img.style.top = Math.random() * maxY + "px";
 
   gameArea.appendChild(img);
 
-  // 0.5 saniye sonra kaybol
-  setTimeout(() => {
-    img.remove();
-  }, 500);
+  setTimeout(() => img.remove(), 500);
 }
 
 function startTimer() {
@@ -162,7 +175,6 @@ function startTimer() {
   }, 1000);
 }
 
-// Oyun başlat
 function startGame() {
   score = 0;
   isGameOver = false;
@@ -171,15 +183,13 @@ function startGame() {
   startTimer();
 }
 
-// Süre seçimi
 function setTime(t) {
   currentTimeSetting = t;
   time = t;
-  record = loadRecord(); // Seçilen süreye ait rekoru yükle
+  record = loadRecord();
   startGame();
 }
 
-// Etkinlikler
 document.addEventListener("click", handleClick);
 document.addEventListener("touchstart", handleClick);
 </script>

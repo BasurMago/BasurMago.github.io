@@ -202,7 +202,8 @@ function setTime(t){
   startGame();
 }
 
-document.addEventListener("click",handleClick);
+/* ✅ SADECE BURASI DEĞİŞTİ */
+document.getElementById("tapGame").addEventListener("click", handleClick);
 
 // ================= SAYI =================
 let number,hak;
@@ -302,9 +303,10 @@ function showTapGame(){
   startGame();
 }
 
+/* ✅ SADECE BURASI DEĞİŞTİ */
 function showNumberGame(){
   hideAll();
-  document.getElementById("gameArea").style.backgroundImage='url("WhatsApp Image 2026-03-18 at 13.50.32.jpeg")';
+  document.getElementById("gameArea").style.backgroundImage='url("file_0000000089c0720ab5442ef2ce9b92ce.png")';
   document.getElementById("numberGame").style.display="flex";
   activeGame="number";
   startNumber();

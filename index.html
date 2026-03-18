@@ -127,7 +127,12 @@ body {
     <div id="time">Süre: 10</div>
     <div id="record">Rekor: 0</div>
     <div id="message"></div>
+
     <audio id="clickSound" src="universfield-playful-failure-310480 (1).mp3"></audio>
+
+    <!-- 🎵 YENİ EKLENEN ARKA PLAN SESİ -->
+    <audio id="bgMusic" src="Video Project 5.m4a" loop></audio>
+
     <div id="menu">
       <button onclick="setTime(10)">10s</button>
       <button onclick="setTime(20)">20s</button>
@@ -153,6 +158,7 @@ let timer;
 let isGameOver = false;
 let currentTimeSetting = 10;
 let clickSound = document.getElementById("clickSound");
+let bgMusic = document.getElementById("bgMusic"); // 🎵 EKLENDİ
 
 function getRecordKey(timeSetting) {
   return "tapRecord_" + timeSetting;
@@ -229,7 +235,12 @@ function setTime(t) {
 document.addEventListener("click", function(e){
   if(document.getElementById("tapGame").style.display !== "none") handleClick();
 });
-window.onload = () => { startGame(); };
+
+// 🎵 SAYFA AÇILINCA DOKUNMA OYUNU AKTİF → SES BAŞLASIN
+window.onload = () => { 
+  startGame(); 
+  bgMusic.play();
+};
 
 // ================= Sayı Tahmin Oyunu ===================
 let numberToGuess = Math.floor(Math.random() * 100) + 1;
@@ -240,12 +251,16 @@ function showNumberGame() {
   document.getElementById("ngMessage").innerText = "";
   document.getElementById("ngInput").value = "";
   numberToGuess = Math.floor(Math.random() * 100) + 1;
+
+  bgMusic.pause(); // 🎵 SES DURUR
 }
 
 function showTapGame() {
   document.getElementById("numberGame").style.display = "none";
   document.getElementById("tapGame").style.display = "block";
   startGame();
+
+  bgMusic.play(); // 🎵 SES TEKRAR BAŞLAR
 }
 
 function checkGuess() {

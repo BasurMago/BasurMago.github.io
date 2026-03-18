@@ -10,7 +10,7 @@ body {
   overflow: hidden;
 }
 
-/* Oyun alanı */
+/* Ortak arka plan */
 #gameArea {
   width: 100%;
   height: 100vh;
@@ -82,9 +82,6 @@ body {
   position: absolute;
   top:0; left:0;
   display: none;
-  background: url("WhatsApp Image 2026-03-18 at 13.50.32.jpeg");
-  background-size: cover;
-  background-position: center;
   color: white;
   display: flex;
   flex-direction: column;
@@ -131,6 +128,11 @@ body {
     <div id="record">Rekor: 0</div>
     <div id="message"></div>
     <audio id="clickSound" src="universfield-playful-failure-310480 (1).mp3"></audio>
+    <div id="menu">
+      <button onclick="setTime(10)">10s</button>
+      <button onclick="setTime(20)">20s</button>
+      <button onclick="setTime(30)">30s</button>
+    </div>
   </div>
 
   <!-- Sayı Tahmin Oyunu -->
@@ -217,11 +219,16 @@ function startGame() {
   startTimer();
 }
 
+function setTime(t) {
+  currentTimeSetting = t;
+  time = t;
+  record = loadRecord();
+  startGame();
+}
+
 document.addEventListener("click", function(e){
   if(document.getElementById("tapGame").style.display !== "none") handleClick();
 });
-
-// Başlangıçta otomatik başlat
 window.onload = () => { startGame(); };
 
 // ================= Sayı Tahmin Oyunu ===================

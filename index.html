@@ -2,68 +2,103 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Random Resim Oyunu</title>
+<title>Dokunma Oyunu</title>
 <style>
   body {
     margin: 0;
     background: #111;
-    overflow: hidden;
     color: white;
-    font-family: Arial;
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    user-select: none;
   }
 
-  #score {
-    position: fixed;
-    top: 10px;
-    left: 10px;
+  #score, #time, #record {
+    font-size: 28px;
+    margin: 10px;
+  }
+
+  #message {
     font-size: 24px;
-  }
-
-  /* Ortadaki resim */
-  #centerImage {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 300px;
-    height: auto;
-    display: none;
-    border-radius: 10px;
+    margin-top: 20px;
+    color: lime;
   }
 </style>
 </head>
 <body>
 
 <div id="score">Skor: 0</div>
-<img id="centerImage">
+<div id="time">Süre: 10</div>
+<div id="record">Rekor: 0</div>
+<div id="message"></div>
 
 <script>
 let score = 0;
-let scoreText = document.getElementById("score");
-let centerImage = document.getElementById("centerImage");
+let time = 10; // süre saniye
+let timer;
+let isGameOver = false;
 
-/* RESİMLER (BURAYA EKLEME YAPABİLİRSİN) */
-let images = [
-  "WhatsApp Image 2026-03-18 at 16.48.01.jpeg",
-  "WhatsApp Image 2026-03-18 at 13.50.32.jpeg"
-];
+// Rekoru localStorage'dan al
+let record = localStorage.getItem("tapRecord") || 0;
+document.getElementById("record").innerText = "Rekor: " + record;
 
-function showRandomImage() {
-  // Skor artır
-  score++;
-  scoreText.innerText = "Skor: " + score;
-
-  // Rastgele resim seç
-  let randomIndex = Math.floor(Math.random() * images.length);
-  let selectedImage = images[randomIndex];
-
-  // Resmi göster
-  centerImage.src = selectedImage;
-  centerImage.style.display = "block";
+function updateDisplay() {
+  document.getElementById("score").innerText = "Skor: " + score;
+  document.getElementById("time").innerText = "Süre: " + time;
+  document.getElementById("record").innerText = "Rekor: " + record;
 }
 
-document.addEventListener("click", showRandomImage);
-document.addEventListener("touchstart", showRandomImage);
+function endGame() {
+  isGameOver = true;
+  document.getElementById("message").innerText = "Oyun bitti! Tıkla tekrar başlatmak için.";
+  // Rekoru kaydet
+  if (score > record) {
+    record = score;
+    localStorage.setItem("tapRecord", record);
+    updateDisplay();
+  }
+}
+
+// Başlat veya tıklama
+function handleClick() {
+  if (isGameOver) {
+    // Resetle
+    score = 0;
+    time = 10;
+    isGameOver = false;
+    document.getElementById("message").innerText = "";
+    updateDisplay();
+    startTimer();
+    return;
+  }
+
+  score++;
+  updateDisplay();
+}
+
+// Zamanlayıcı
+function startTimer() {
+  timer = setInterval(() => {
+    if (time > 0) {
+      time--;
+      updateDisplay();
+    } else {
+      clearInterval(timer);
+      endGame();
+    }
+  }, 1000);
+}
+
+// Etkinlikler
+document.addEventListener("click", handleClick);
+document.addEventListener("touchstart", handleClick);
+
+// Başlat
+startTimer();
 </script>
 
 </body>

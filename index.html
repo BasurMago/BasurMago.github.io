@@ -1,0 +1,158 @@
+<!DOCTYPE html><html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flappy Bird</title><style>
+body { margin:0; overflow:hidden; }
+canvas { display:block; }
+</style></head><body>
+<canvas id="game"></canvas><script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+function resize(){
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener("resize", resize);
+
+// RESİMLER
+const birdImg = new Image();
+birdImg.src = "bird.png";
+
+const bgImg = new Image();
+bgImg.src = "bg.png";
+
+const pipeImg = new Image();
+pipeImg.src = "pipe.png";
+
+// SES
+const flapSound = new Audio("flap.wav");
+const hitSound = new Audio("hit.wav");
+const pointSound = new Audio("point.wav");
+
+// KUŞ
+let bird = {
+  x: 120,
+  y: 200,
+  size: 35,
+  velocity: 0,
+  gravity: 0.6,
+  lift: -11
+};
+
+// OYUN
+let pipes = [];
+let gap = 180;
+let speed = 3;
+let frame = 0;
+let score = 0;
+let highScore = localStorage.getItem("highscore") || 0;
+let gameOver = false;
+
+// ARKA PLAN
+let bgX = 0;
+
+// KONTROL
+function flap(){
+  if(gameOver){
+    location.reload();
+  }
+  bird.velocity = bird.lift;
+  flapSound.currentTime = 0;
+  flapSound.play();
+}
+
+document.addEventListener("click", flap);
+document.addEventListener("touchstart", flap);
+document.addEventListener("keydown", e=>{
+  if(e.code === "Space") flap();
+});
+
+// OYUN DÖNGÜSÜ
+function update(){
+
+  // ARKA PLAN PARALLAX
+  bgX -= 1;
+  if(bgX <= -canvas.width) bgX = 0;
+  ctx.drawImage(bgImg, bgX, 0, canvas.width, canvas.height);
+  ctx.drawImage(bgImg, bgX + canvas.width, 0, canvas.width, canvas.height);
+
+  // KUŞ FİZİK
+  bird.velocity += bird.gravity;
+  bird.y += bird.velocity;
+
+  ctx.drawImage(birdImg, bird.x, bird.y, bird.size, bird.size);
+
+  // BORU
+  if(frame % 90 === 0){
+    let top = Math.random() * (canvas.height - gap - 200) + 50;
+    pipes.push({
+      x: canvas.width,
+      top: top,
+      bottom: top + gap,
+      passed: false
+    });
+  }
+
+  pipes.forEach(p => {
+    p.x -= speed;
+
+    // BORULAR
+    ctx.drawImage(pipeImg, p.x, 0, 60, p.top);
+    ctx.drawImage(pipeImg, p.x, p.bottom, 60, canvas.height);
+
+    // ÇARPIŞMA
+    if(
+      bird.x < p.x + 60 &&
+      bird.x + bird.size > p.x &&
+      (bird.y < p.top || bird.y + bird.size > p.bottom)
+    ){
+      hitSound.play();
+      gameOver = true;
+    }
+
+    // SKOR
+    if(!p.passed && p.x + 60 < bird.x){
+      score++;
+      pointSound.play();
+      p.passed = true;
+
+      if(score > highScore){
+        highScore = score;
+        localStorage.setItem("highscore", highScore);
+      }
+    }
+  });
+
+  // YERE ÇARPMA
+  if(bird.y > canvas.height || bird.y < 0){
+    hitSound.play();
+    gameOver = true;
+  }
+
+  // YAZILAR
+  ctx.fillStyle = "white";
+  ctx.font = "bold 40px Arial";
+  ctx.fillText("Skor: " + score, 20, 50);
+  ctx.fillText("Rekor: " + highScore, 20, 100);
+
+  // GAME OVER
+  if(gameOver){
+    ctx.fillStyle = "red";
+    ctx.font = "bold 60px Arial";
+    ctx.fillText("GAME OVER", canvas.width/2 - 180, canvas.height/2);
+
+    ctx.font = "25px Arial";
+    ctx.fillText("Tekrar başlamak için dokun", canvas.width/2 - 160, canvas.height/2 + 50);
+    return;
+  }
+
+  frame++;
+  requestAnimationFrame(update);
+}
+
+update();
+</script></body>
+</html>

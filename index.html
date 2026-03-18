@@ -2,12 +2,22 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Dokununca Resim</title>
+<title>Dokunma Oyunu</title>
 <style>
   body {
     margin: 0;
     background: #111;
     overflow: hidden;
+    color: white;
+    font-family: Arial;
+  }
+
+  /* Skor yazısı */
+  #score {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    font-size: 24px;
   }
 
   /* Resimlerin çıkacağı alan */
@@ -30,12 +40,21 @@
 </head>
 <body>
 
+<div id="score">Skor: 0</div>
 <div id="container"></div>
 
 <script>
 let container = document.getElementById("container");
+let scoreText = document.getElementById("score");
+
+let score = 0;
 
 function addImage() {
+  // Skor artır
+  score++;
+  scoreText.innerText = "Skor: " + score;
+
+  // Resim ekle
   let img = document.createElement("img");
   img.src = "WhatsApp Image 2026-03-18 at 16.48.01.jpeg";
   img.className = "mini";

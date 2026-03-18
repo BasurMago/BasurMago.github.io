@@ -6,7 +6,7 @@
 <style>
 body {
   margin: 0;
-  font-family: Arial;
+  font-family: Arial, sans-serif;
   overflow: hidden;
 }
 
@@ -16,6 +16,7 @@ body {
   position: relative;
   background: url("WhatsApp Image 2026-03-18 at 13.50.32.jpeg");
   background-size: cover;
+  background-position: center;
 }
 
 /* Butonlar */
@@ -28,52 +29,54 @@ body {
 
 #gameButtons button {
   margin-left: 5px;
-  padding: 8px;
+  padding: 8px 12px;
+  font-size: 16px;
   cursor: pointer;
 }
 
-/* Ortak */
-.game {
-  position: absolute;
+/* Dokunma oyunu */
+#tapGame {
   width: 100%;
   height: 100%;
+  position: absolute;
+}
+
+#tapGame #score, #tapGame #time, #tapGame #record {
+  font-size: 28px;
+  margin: 10px;
+  color: white;
+  text-shadow: 1px 1px 5px black;
+}
+
+#tapGame #message {
+  font-size: 24px;
+  color: lime;
+}
+
+/* Sayı tahmin oyunu */
+#numberGame {
+  width: 100%;
+  height: 100%;
+  position: absolute;
   display: none;
   color: white;
-}
-
-/* Dokunma */
-#tapGame div {
-  font-size: 24px;
-  margin: 10px;
-}
-
-/* Sayı */
-#numberGame {
-  display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: column;
 }
 
-/* Sudoku */
-#sudokuGame {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-#sudokuBoard {
-  display: grid;
-  grid-template-columns: repeat(9, 40px);
-  gap: 2px;
-}
-
-#sudokuBoard input {
-  width: 40px;
-  height: 40px;
+#numberGame input {
+  padding: 10px;
+  font-size: 20px;
+  width: 100px;
   text-align: center;
+}
+
+#numberGame button {
+  padding: 8px 16px;
   font-size: 18px;
+  margin-top: 10px;
+  cursor: pointer;
 }
 </style>
 </head>
@@ -81,131 +84,121 @@ body {
 
 <div id="gameArea">
 
-<div id="gameButtons">
-  <button onclick="showTapGame()">Dokunma</button>
-  <button onclick="showNumberGame()">Tahmin</button>
-  <button onclick="showSudoku()">Sudoku</button>
-</div>
-
-<!-- Dokunma -->
-<div id="tapGame" class="game">
-  <div id="score">Skor: 0</div>
-  <div id="time">Süre: 10</div>
-</div>
-
-<!-- Sayı -->
-<div id="numberGame" class="game">
-  <div>Kalan Hak: <span id="hak"></span></div>
-  <input id="ngInput" type="number">
-  <button onclick="checkGuess()">Tahmin</button>
-  <div id="ngMessage"></div>
-</div>
-
-<!-- Sudoku -->
-<div id="sudokuGame" class="game">
-  <div>
-    <button onclick="generateSudoku('easy')">Kolay</button>
-    <button onclick="generateSudoku('medium')">Orta</button>
-    <button onclick="generateSudoku('hard')">Zor</button>
+  <div id="gameButtons">
+    <button onclick="showTapGame()">Dokunma Oyunu</button>
+    <button onclick="showNumberGame()">Sayı Tahmin Oyunu</button>
   </div>
-  <div id="sudokuBoard"></div>
-</div>
+
+  <!-- Dokunma Oyunu -->
+  <div id="tapGame">
+    <div id="score">Skor: 0</div>
+    <div id="time">Süre: 10</div>
+    <div id="record">Rekor: 0</div>
+    <div id="message"></div>
+  </div>
+
+  <!-- Sayı Tahmin Oyunu -->
+  <div id="numberGame">
+    <div>1-100 arası sayı tahmin et</div>
+    <div id="hak">Kalan Hak: 5</div>
+    <input type="number" id="ngInput">
+    <button onclick="checkGuess()">Tahmin Et</button>
+    <div id="ngMessage"></div>
+  </div>
 
 </div>
 
 <script>
-// ===== Dokunma =====
-let score=0,time=10,timer;
-function startTap(){
-  score=0; time=10;
+// ===== Dokunma Oyunu =====
+let score = 0;
+let time = 10;
+let timer;
+let isGameOver = false;
+
+function startGame() {
+  score = 0;
+  time = 10;
+  isGameOver = false;
+  updateDisplay();
   clearInterval(timer);
-  timer=setInterval(()=>{time--;updateTap(); if(time<=0)clearInterval(timer)},1000);
+  timer = setInterval(() => {
+    if(time > 0){
+      time--;
+      updateDisplay();
+    } else {
+      document.getElementById("message").innerText = "Bitti!";
+      isGameOver = true;
+      clearInterval(timer);
+    }
+  },1000);
 }
-function updateTap(){
-  score++;
-  document.getElementById("score").innerText="Skor: "+score;
-  document.getElementById("time").innerText="Süre: "+time;
+
+function updateDisplay(){
+  document.getElementById("score").innerText = "Skor: " + score;
+  document.getElementById("time").innerText = "Süre: " + time;
 }
-document.addEventListener("click",()=> {
-  if(activeGame==="tap") updateTap();
+
+document.addEventListener("click", function(){
+  if(document.getElementById("tapGame").style.display !== "none"){
+    if(!isGameOver){
+      score++;
+      updateDisplay();
+    } else {
+      startGame();
+    }
+  }
 });
 
-// ===== Tahmin =====
-let number,hak;
-function startNumber(){
-  number=Math.floor(Math.random()*100)+1;
-  hak=5;
-  document.getElementById("hak").innerText=hak;
-  document.getElementById("ngMessage").innerText="";
+// ===== Sayı Tahmin Oyunu =====
+let numberToGuess;
+let hak;
+
+function startNumberGame(){
+  numberToGuess = Math.floor(Math.random()*100)+1;
+  hak = 5;
+  document.getElementById("hak").innerText = "Kalan Hak: " + hak;
+  document.getElementById("ngMessage").innerText = "";
+  document.getElementById("ngInput").value = "";
 }
+
 function checkGuess(){
-  if(hak<=0) return;
-  let g=parseInt(document.getElementById("ngInput").value);
+  let guess = parseInt(document.getElementById("ngInput").value);
+  let msg = document.getElementById("ngMessage");
+
+  if(hak <= 0) return;
+
   hak--;
-  document.getElementById("hak").innerText=hak;
-  if(g===number){
-    document.getElementById("ngMessage").innerText="Tebrikler!";
-    hak=0;
-  } else if(hak===0){
-    document.getElementById("ngMessage").innerText="Kaybettin! "+number;
-  } else if(g<number){
-    document.getElementById("ngMessage").innerText="Daha büyük";
+  document.getElementById("hak").innerText = "Kalan Hak: " + hak;
+
+  if(guess === numberToGuess){
+    msg.innerText = "🎉 Tebrikler bildin!";
+    hak = 0;
+  } else if(hak === 0){
+    msg.innerText = "❌ Kaybettiniz! Sayı: " + numberToGuess;
+  } else if(guess < numberToGuess){
+    msg.innerText = "Daha büyük!";
   } else {
-    document.getElementById("ngMessage").innerText="Daha küçük";
+    msg.innerText = "Daha küçük!";
   }
 }
 
-// ===== Sudoku =====
-function generateSudoku(level){
-  const board=document.getElementById("sudokuBoard");
-  board.innerHTML="";
-  let emptyCount = level==="easy"?30: level==="medium"?45:55;
-
-  for(let i=0;i<81;i++){
-    let input=document.createElement("input");
-    if(Math.random()*81 < emptyCount){
-      input.value="";
-    } else {
-      input.value=Math.floor(Math.random()*9)+1;
-      input.disabled=true;
-    }
-    board.appendChild(input);
-  }
-}
-
-// ===== Oyun Yönetimi =====
-let activeGame="";
-
-function hideAll(){
-  document.querySelectorAll(".game").forEach(g=>g.style.display="none");
-}
-
+// ===== Oyun Değiştirme =====
 function showTapGame(){
-  hideAll();
-  document.getElementById("gameArea").style.background='url("WhatsApp Image 2026-03-18 at 13.50.32.jpeg")';
-  document.getElementById("tapGame").style.display="block";
-  activeGame="tap";
-  startTap();
+  document.getElementById("tapGame").style.display = "block";
+  document.getElementById("numberGame").style.display = "none";
+  startGame();
 }
 
 function showNumberGame(){
-  hideAll();
-  document.getElementById("gameArea").style.background='url("WhatsApp Image 2026-03-18 at 13.50.32.jpeg")';
-  document.getElementById("numberGame").style.display="flex";
-  activeGame="number";
-  startNumber();
+  document.getElementById("tapGame").style.display = "none";
+  document.getElementById("numberGame").style.display = "flex";
+  startNumberGame();
 }
 
-function showSudoku(){
-  hideAll();
-  document.getElementById("gameArea").style.background='url("WhatsApp Image 2026-03-18 at 16.48.01.jpeg")';
-  document.getElementById("sudokuGame").style.display="flex";
-  activeGame="sudoku";
-  generateSudoku("easy");
-}
-
-// BAŞLANGIÇ
-window.onload=()=>showTapGame();
+// SAYFA AÇILINCA SADECE DOKUNMA OYUNU
+window.onload = function(){
+  showTapGame();
+};
 </script>
 
 </body>

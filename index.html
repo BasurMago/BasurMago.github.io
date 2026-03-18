@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Dokunma Oyunu</title>
+<title>Random Resim Oyunu</title>
 <style>
   body {
     margin: 0;
@@ -12,7 +12,6 @@
     font-family: Arial;
   }
 
-  /* Skor yazısı */
   #score {
     position: fixed;
     top: 10px;
@@ -20,49 +19,51 @@
     font-size: 24px;
   }
 
-  /* Resimlerin çıkacağı alan */
-  #container {
+  /* Ortadaki resim */
+  #centerImage {
     position: fixed;
-    top: 10px;
-    right: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-
-  .mini {
-    width: 50px;
-    height: 50px;
-    object-fit: cover;
-    border-radius: 5px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px;
+    height: auto;
+    display: none;
+    border-radius: 10px;
   }
 </style>
 </head>
 <body>
 
 <div id="score">Skor: 0</div>
-<div id="container"></div>
+<img id="centerImage">
 
 <script>
-let container = document.getElementById("container");
-let scoreText = document.getElementById("score");
-
 let score = 0;
+let scoreText = document.getElementById("score");
+let centerImage = document.getElementById("centerImage");
 
-function addImage() {
+/* RESİMLER (BURAYA EKLEME YAPABİLİRSİN) */
+let images = [
+  "WhatsApp Image 2026-03-18 at 16.48.01.jpeg",
+  "WhatsApp Image 2026-03-18 at 13.50.32.jpeg"
+];
+
+function showRandomImage() {
   // Skor artır
   score++;
   scoreText.innerText = "Skor: " + score;
 
-  // Resim ekle
-  let img = document.createElement("img");
-  img.src = "WhatsApp Image 2026-03-18 at 16.48.01.jpeg";
-  img.className = "mini";
-  container.appendChild(img);
+  // Rastgele resim seç
+  let randomIndex = Math.floor(Math.random() * images.length);
+  let selectedImage = images[randomIndex];
+
+  // Resmi göster
+  centerImage.src = selectedImage;
+  centerImage.style.display = "block";
 }
 
-document.addEventListener("click", addImage);
-document.addEventListener("touchstart", addImage);
+document.addEventListener("click", showRandomImage);
+document.addEventListener("touchstart", showRandomImage);
 </script>
 
 </body>

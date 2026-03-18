@@ -119,6 +119,9 @@ body { margin:0; font-family:Arial; overflow:hidden; }
   <div id="ngMessage"></div>
   <div>Kazanılan Oyun: <span id="ngWins">0</span></div>
   <button id="retryBtn" onclick="retryGame()" style="display:none;">Tekrar Oyna</button>
+
+  <!-- ✅ EKLENEN MÜZİK -->
+  <audio id="bgMusic" src="1773859882350Converted.mp3" loop></audio>
 </div>
 
 <!-- REFLEKS -->
@@ -202,13 +205,15 @@ function setTime(t){
   startGame();
 }
 
-/* ✅ SADECE BURASI DEĞİŞTİ */
 document.getElementById("tapGame").addEventListener("click", handleClick);
 
 // ================= SAYI =================
 let number,hak;
 let wins = localStorage.getItem("guessWins") || 0;
 document.getElementById("ngWins").innerText = wins;
+
+/* ✅ MÜZİK TANIM */
+let bgMusic = document.getElementById("bgMusic");
 
 function startNumber(){
   number = Math.floor(Math.random()*100)+1;
@@ -301,15 +306,19 @@ function showTapGame(){
   document.getElementById("tapGame").style.display="block";
   activeGame="tap";
   startGame();
+
+  bgMusic.pause();
 }
 
-/* ✅ SADECE BURASI DEĞİŞTİ */
 function showNumberGame(){
   hideAll();
   document.getElementById("gameArea").style.backgroundImage='url("file_0000000089c0720ab5442ef2ce9b92ce.png")';
   document.getElementById("numberGame").style.display="flex";
   activeGame="number";
   startNumber();
+
+  bgMusic.currentTime = 0;
+  bgMusic.play();
 }
 
 function showReflexGame(){
@@ -318,6 +327,8 @@ function showReflexGame(){
   document.getElementById("reflexGame").style.display="flex";
   activeGame="reflex";
   startReflex();
+
+  bgMusic.pause();
 }
 
 window.onload = ()=>showTapGame();

@@ -3,56 +3,33 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Flappy Bird</title><style>
-body { margin:0; overflow:hidden; }
+body { margin:0; overflow:hidden; background:#70c5ce; }
 canvas { display:block; }
 </style></head><body>
 <canvas id="game"></canvas><script>
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-function resize(){
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-resize();
-window.addEventListener("resize", resize);
-
-// RESİMLER
-const birdImg = new Image();
-birdImg.src = "bird.png";
-
-const bgImg = new Image();
-bgImg.src = "bg.png";
-
-const pipeImg = new Image();
-pipeImg.src = "pipe.png";
-
-// SES
-const flapSound = new Audio("flap.wav");
-const hitSound = new Audio("hit.wav");
-const pointSound = new Audio("point.wav");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
 // KUŞ
 let bird = {
-  x: 120,
+  x: 100,
   y: 200,
-  size: 35,
+  size: 20,
   velocity: 0,
-  gravity: 0.6,
-  lift: -11
+  gravity: 0.5,
+  lift: -8
 };
 
 // OYUN
 let pipes = [];
-let gap = 180;
+let gap = 150;
 let speed = 3;
 let frame = 0;
 let score = 0;
-let highScore = localStorage.getItem("highscore") || 0;
 let gameOver = false;
-
-// ARKA PLAN
-let bgX = 0;
 
 // KONTROL
 function flap(){
@@ -60,8 +37,6 @@ function flap(){
     location.reload();
   }
   bird.velocity = bird.lift;
-  flapSound.currentTime = 0;
-  flapSound.play();
 }
 
 document.addEventListener("click", flap);
@@ -70,24 +45,24 @@ document.addEventListener("keydown", e=>{
   if(e.code === "Space") flap();
 });
 
-// OYUN DÖNGÜSÜ
+// LOOP
 function update(){
 
-  // ARKA PLAN PARALLAX
-  bgX -= 1;
-  if(bgX <= -canvas.width) bgX = 0;
-  ctx.drawImage(bgImg, bgX, 0, canvas.width, canvas.height);
-  ctx.drawImage(bgImg, bgX + canvas.width, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "#70c5ce";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  // KUŞ FİZİK
+  // KUŞ
   bird.velocity += bird.gravity;
   bird.y += bird.velocity;
 
-  ctx.drawImage(birdImg, bird.x, bird.y, bird.size, bird.size);
+  ctx.fillStyle = "yellow";
+  ctx.beginPath();
+  ctx.arc(bird.x, bird.y, bird.size, 0, Math.PI*2);
+  ctx.fill();
 
   // BORU
   if(frame % 90 === 0){
-    let top = Math.random() * (canvas.height - gap - 200) + 50;
+    let top = Math.random() * (canvas.height - gap - 100) + 50;
     pipes.push({
       x: canvas.width,
       top: top,
@@ -99,53 +74,38 @@ function update(){
   pipes.forEach(p => {
     p.x -= speed;
 
-    // BORULAR
-    ctx.drawImage(pipeImg, p.x, 0, 60, p.top);
-    ctx.drawImage(pipeImg, p.x, p.bottom, 60, canvas.height);
+    ctx.fillStyle = "green";
+    ctx.fillRect(p.x, 0, 50, p.top);
+    ctx.fillRect(p.x, p.bottom, 50, canvas.height);
 
-    // ÇARPIŞMA
+    // çarpışma
     if(
-      bird.x < p.x + 60 &&
       bird.x + bird.size > p.x &&
-      (bird.y < p.top || bird.y + bird.size > p.bottom)
+      bird.x - bird.size < p.x + 50 &&
+      (bird.y - bird.size < p.top || bird.y + bird.size > p.bottom)
     ){
-      hitSound.play();
       gameOver = true;
     }
 
-    // SKOR
-    if(!p.passed && p.x + 60 < bird.x){
+    // skor
+    if(!p.passed && p.x < bird.x){
       score++;
-      pointSound.play();
       p.passed = true;
-
-      if(score > highScore){
-        highScore = score;
-        localStorage.setItem("highscore", highScore);
-      }
     }
   });
 
-  // YERE ÇARPMA
   if(bird.y > canvas.height || bird.y < 0){
-    hitSound.play();
     gameOver = true;
   }
 
-  // YAZILAR
   ctx.fillStyle = "white";
-  ctx.font = "bold 40px Arial";
-  ctx.fillText("Skor: " + score, 20, 50);
-  ctx.fillText("Rekor: " + highScore, 20, 100);
+  ctx.font = "30px Arial";
+  ctx.fillText("Skor: " + score, 20, 40);
 
-  // GAME OVER
   if(gameOver){
     ctx.fillStyle = "red";
-    ctx.font = "bold 60px Arial";
-    ctx.fillText("GAME OVER", canvas.width/2 - 180, canvas.height/2);
-
-    ctx.font = "25px Arial";
-    ctx.fillText("Tekrar başlamak için dokun", canvas.width/2 - 160, canvas.height/2 + 50);
+    ctx.font = "50px Arial";
+    ctx.fillText("GAME OVER", canvas.width/2 - 150, canvas.height/2);
     return;
   }
 

@@ -2,27 +2,39 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Flappy Bird Gelişmiş</title><style>
-body { margin:0; overflow:hidden; }
-canvas { display:block; }
-
-#gameOverScreen {
-  position:absolute;
-  top:0; left:0;
-  width:100%; height:100%;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  font-size:50px;
-  color:white;
-  text-align:center;
-  background: url('WhatsApp Image 2026-03-18 at 16.48.01.jpeg') no-repeat center/cover;
-  z-index:10;
-  display:none;
+<title>Block Blast</title>
+<style>
+body { margin:0; overflow:hidden; font-family:sans-serif; }
+canvas { display:block; background: url('WhatsApp Image 2026-03-18 at 13.50.32.jpeg') no-repeat center/cover; }#gameOverScreen {
+position:absolute;
+top:0; left:0;
+width:100%; height:100%;
+display:flex;
+justify-content:center;
+align-items:center;
+font-size:50px;
+color:white;
+text-align:center;
+background: url('WhatsApp Image 2026-03-18 at 16.48.01.jpeg') no-repeat center/cover;
+z-index:10;
+display:none;
+flex-direction: column;
 }
-</style></head><body>
+#gameOverScreen button {
+margin-top:20px;
+padding:10px 20px;
+font-size:25px;
+cursor:pointer;
+}
+</style>
+
+</head>
+<body>
 <canvas id="game"></canvas>
-<div id="gameOverScreen">GAME OVER<br>Tıklayarak tekrar başla</div><script>
+<div id="gameOverScreen">
+  <div>GAME OVER</div>
+  <button onclick="restartGame()">Yeniden Başlat</button>
+</div><script>
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 const gameOverScreen = document.getElementById("gameOverScreen");
@@ -30,114 +42,137 @@ const gameOverScreen = document.getElementById("gameOverScreen");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-// Arka plan
-const bgImg = new Image();
-bgImg.src = 'WhatsApp Image 2026-03-18 at 13.50.32.jpeg';
+// GRID
+const ROWS = 8;
+const COLS = 8;
+const grid = Array.from({length:ROWS}, ()=>Array(COLS).fill(null));
+const blockSize = Math.min(canvas.width/COLS, canvas.height/ROWS) - 5;
 
-// Kuş
-let bird = {
-  x: 100,
-  y: canvas.height/2,
-  size: 25,
-  velocity: 0,
-  gravity: 0.25,   // daha yavaş düşüş
-  lift: -7         // daha yumuşak zıplama
-};
+// BLOKLAR
+const colors = ["red","orange","yellow","green","blue","purple"];
 
-// Borular
-let pipes = [];
-let gap = 200;       // duvar aralığı arttı
-let speed = 2.5;
-let frame = 0;
+// SKOR
 let score = 0;
 let highScore = localStorage.getItem("highscore") || 0;
-let gameOver = false;
 
-// Kontrol (PC + mobil)
-function flap(){
-  if(gameOver){
-    location.reload();
-  }
-  bird.velocity = bird.lift;
+// OYUN DURUMU
+let gameOver = false;
+let selectedBlock = null;
+
+// RANDOM BLOK ÜRET
+function getRandomBlock(){
+  const color = colors[Math.floor(Math.random()*colors.length)];
+  const w = Math.floor(Math.random()*3)+1; // 1-3 genişlik
+  const h = Math.floor(Math.random()*3)+1; // 1-3 yükseklik
+  return {color,w,h};
 }
 
-document.addEventListener("click", flap);
-document.addEventListener("touchstart", flap);
-document.addEventListener("keydown", e=>{
-  if(e.code === "Space") flap();
-});
+// Seçili blokları hazırla
+let nextBlocks = [getRandomBlock(), getRandomBlock(), getRandomBlock()];
 
-function update(){
-
-  // Arka plan
-  ctx.drawImage(bgImg,0,0,canvas.width,canvas.height);
-
-  // Kuş
-  bird.velocity += bird.gravity;
-  bird.y += bird.velocity;
-
-  ctx.fillStyle="yellow";
-  ctx.beginPath();
-  ctx.arc(bird.x, bird.y, bird.size, 0, Math.PI*2);
-  ctx.fill();
-
-  // Boru oluşturma
-  if(frame % 100 === 0){
-    let top = Math.random() * (canvas.height - gap - 100) + 50;
-    pipes.push({
-      x: canvas.width,
-      top: top,
-      bottom: top + gap,
-      passed: false
-    });
-  }
-
-  // Boruları çiz ve çarpışma
-  pipes.forEach(p=>{
-    p.x -= speed;
-
-    ctx.fillStyle="green";
-    ctx.fillRect(p.x, 0, 60, p.top);
-    ctx.fillRect(p.x, p.bottom, 60, canvas.height);
-
-    // Çarpışma
-    if(bird.x + bird.size > p.x &&
-       bird.x - bird.size < p.x + 60 &&
-       (bird.y - bird.size < p.top || bird.y + bird.size > p.bottom)){
-         gameOver = true;
-    }
-
-    // Skor
-    if(!p.passed && p.x + 60 < bird.x){
-      score++;
-      p.passed = true;
-      if(score > highScore){
-        highScore = score;
-        localStorage.setItem("highscore", highScore);
+// Çizim
+function drawGrid(){
+  for(let r=0;r<ROWS;r++){
+    for(let c=0;c<COLS;c++){
+      if(grid[r][c]){
+        ctx.fillStyle = grid[r][c];
+        ctx.fillRect(c*blockSize,r*blockSize,blockSize-2,blockSize-2);
+      } else {
+        ctx.fillStyle = "rgba(255,255,255,0.1)";
+        ctx.fillRect(c*blockSize,r*blockSize,blockSize-2,blockSize-2);
       }
     }
-  });
-
-  if(bird.y > canvas.height || bird.y < 0){
-    gameOver = true;
   }
-
-  // Skor
-  ctx.fillStyle="white";
-  ctx.font="30px Arial";
-  ctx.fillText("Skor: "+score, 20,40);
-  ctx.fillText("Rekor: "+highScore, 20,80);
-
-  // Game Over
-  if(gameOver){
-    gameOverScreen.style.display = "flex";
-    return;
-  }
-
-  frame++;
-  requestAnimationFrame(update);
 }
 
-update();
+// Çizim + skor
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  drawGrid();
+  ctx.fillStyle = "white";
+  ctx.font = "25px Arial";
+  ctx.fillText("Skor: "+score, 20,30);
+  ctx.fillText("Rekor: "+highScore, 20,60);
+}
+
+// Satır/sütun temizleme
+function checkClear(){
+  for(let r=0;r<ROWS;r++){
+    if(grid[r].every(cell=>cell)){
+      for(let c=0;c<COLS;c++) grid[r][c]=null;
+      score+=COLS;
+    }
+  }
+  for(let c=0;c<COLS;c++){
+    let full = true;
+    for(let r=0;r<ROWS;r++){
+      if(!grid[r][c]) full=false;
+    }
+    if(full){
+      for(let r=0;r<ROWS;r++) grid[r][c]=null;
+      score+=ROWS;
+    }
+  }
+  if(score>highScore){
+    highScore=score;
+    localStorage.setItem("highscore",highScore);
+  }
+}
+
+// Yerleştirme kontrol
+function canPlaceBlock(block, row, col){
+  if(row+block.h>ROWS || col+block.w>COLS) return false;
+  for(let r=0;r<block.h;r++){
+    for(let c=0;c<block.w;c++){
+      if(grid[row+r][col+c]) return false;
+    }
+  }
+  return true;
+}
+
+function placeBlock(block, row, col){
+  for(let r=0;r<block.h;r++){
+    for(let c=0;c<block.w;c++){
+      grid[row+r][col+c]=block.color;
+    }
+  }
+  checkClear();
+}
+
+// Mouse / touch
+canvas.addEventListener("click", e=>{
+  if(gameOver) return;
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX-rect.left;
+  const y = e.clientY-rect.top;
+  const col = Math.floor(x/blockSize);
+  const row = Math.floor(y/blockSize);
+  const block = nextBlocks[0];
+  if(canPlaceBlock(block,row,col)){
+    placeBlock(block,row,col);
+    nextBlocks.shift();
+    nextBlocks.push(getRandomBlock());
+  } else {
+    gameOver=true;
+    gameOverScreen.style.display="flex";
+  }
+});
+
+// Game Loop
+function loop(){
+  draw();
+  if(!gameOver) requestAnimationFrame(loop);
+}
+
+loop();
+
+function restartGame(){
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) grid[r][c]=null;
+  score=0;
+  nextBlocks=[getRandomBlock(),getRandomBlock(),getRandomBlock()];
+  gameOver=false;
+  gameOverScreen.style.display="none";
+  loop();
+}
 </script></body>
 </html>

@@ -3,18 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Block Blast Kopya</title>
+<title>Block Blast</title>
 <style>
-body { margin:0; display:flex; justify-content:center; align-items:center; height:100vh; background:#000; font-family:sans-serif; }
-#gameContainer { position:relative; }
-canvas { display:block; background: url('WhatsApp Image 2026-03-18 at 13.50.32.jpeg') no-repeat center/cover; }
-#gameOverScreen {
-  position:absolute; top:0; left:0; width:100%; height:100%; display:flex; justify-content:center; align-items:center; flex-direction: column; font-size:50px; color:white; text-align:center;
-  background: url('WhatsApp Image 2026-03-18 at 16.48.01.jpeg') no-repeat center/cover; z-index:10; display:none;
-}
-#gameOverScreen button { margin-top:20px; padding:10px 20px; font-size:25px; cursor:pointer; }
-#nextBlocks { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); display:flex; gap:10px; }
-.blockPreview { width:60px; height:60px; cursor:pointer; border:2px solid white; display:flex; justify-content:center; align-items:center; font-weight:bold; color:white; }
+  html, body { margin:0; padding:0; width:100%; height:100%; display:flex; justify-content:center; align-items:center; background:#000; font-family:sans-serif; }
+  #gameContainer { position:relative; width:400px; height:500px; }
+  canvas { background: url('WhatsApp Image 2026-03-18 at 13.50.32.jpeg') no-repeat center/cover; display:block; margin:0 auto; border:2px solid #fff; }
+  #gameOverScreen {
+    position:absolute; top:0; left:0; width:100%; height:100%; display:flex; justify-content:center; align-items:center; flex-direction: column; font-size:40px; color:white; text-align:center;
+    background: url('WhatsApp Image 2026-03-18 at 16.48.01.jpeg') no-repeat center/cover; z-index:10; display:none;
+  }
+  #gameOverScreen button { margin-top:20px; padding:10px 20px; font-size:20px; cursor:pointer; }
+  #nextBlocks { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); display:flex; gap:10px; }
+  .blockPreview { width:60px; height:60px; cursor:pointer; border:2px solid white; display:flex; justify-content:center; align-items:center; font-weight:bold; color:white; }
 </style>
 </head>
 <body>
@@ -34,16 +34,14 @@ const gameOverScreen = document.getElementById("gameOverScreen");
 const nextBlocksContainer = document.getElementById("nextBlocks");
 
 const ROWS=8, COLS=8;
-const grid=Array.from({length:ROWS},()=>Array(COLS).fill(null));
 const blockSize=canvas.width / COLS - 2;
-
+const grid=Array.from({length:ROWS},()=>Array(COLS).fill(null));
 const colors = ["#e74c3c","#f1c40f","#2ecc71","#3498db","#9b59b6","#e67e22"];
 let score=0, highScore=localStorage.getItem("highscore")||0;
 let gameOver=false;
 let selectedBlock=null;
-let dragOffset={x:0,y:0};
 
-// Orijinal Block Blast blok seti (19 şekil örneği)
+// Block shapes örnek (19 farklı şekil)
 const blockShapes=[
   [[1]], [[1,1]], [[1],[1]], [[1,1,1]], [[1],[1],[1]],
   [[1,1],[1,0]], [[0,1],[1,1]], [[1,1,1],[0,1,0]], [[1,1],[1,1]],
@@ -53,24 +51,16 @@ const blockShapes=[
 ];
 
 function getRandomBlock(){
-  const color = colors[Math.floor(Math.random()*colors.length)];
-  const shape = blockShapes[Math.floor(Math.random()*blockShapes.length)];
-  return {color, shape};
+  return {shape:blockShapes[Math.floor(Math.random()*blockShapes.length)], color: colors[Math.floor(Math.random()*colors.length)]};
 }
 
-// Başlangıç 3 blok
 let nextBlocks=[getRandomBlock(),getRandomBlock(),getRandomBlock()];
 
 function drawGrid(){
   for(let r=0;r<ROWS;r++){
     for(let c=0;c<COLS;c++){
-      if(grid[r][c]){
-        ctx.fillStyle=grid[r][c];
-        ctx.fillRect(c*blockSize,r*blockSize,blockSize-2,blockSize-2);
-      } else {
-        ctx.fillStyle="rgba(255,255,255,0.1)";
-        ctx.fillRect(c*blockSize,r*blockSize,blockSize-2,blockSize-2);
-      }
+      ctx.fillStyle=grid[r][c] || "rgba(255,255,255,0.1)";
+      ctx.fillRect(c*blockSize,r*blockSize,blockSize-2,blockSize-2);
     }
   }
 }
@@ -104,7 +94,7 @@ function canPlaceBlock(block,row,col){
   for(let r=0;r<shape.length;r++){
     for(let c=0;c<shape[0].length;c++){
       if(shape[r][c]){
-        const gr=r+row, gc=c+col;
+        const gr=row+r, gc=col+c;
         if(gr>=ROWS || gc>=COLS || grid[gr][gc]) return false;
       }
     }
@@ -140,12 +130,6 @@ function startDrag(e){
   if(gameOver) return;
   const index=parseInt(e.target.dataset.index);
   selectedBlock=nextBlocks[index];
-  const rect=canvas.getBoundingClientRect();
-  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-  dragOffset.x = clientX - rect.left;
-  dragOffset.y = clientY - rect.top;
-
   window.addEventListener("mousemove", onDrag);
   window.addEventListener("mouseup", endDrag);
   window.addEventListener("touchmove", onDrag);
@@ -154,22 +138,7 @@ function startDrag(e){
 
 function onDrag(e){
   if(!selectedBlock) return;
-  const rect=canvas.getBoundingClientRect();
-  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
   draw();
-  const col=Math.floor((clientX-rect.left)/blockSize);
-  const row=Math.floor((clientY-rect.top)/blockSize);
-
-  const shape=selectedBlock.shape;
-  ctx.globalAlpha=0.5;
-  ctx.fillStyle=selectedBlock.color;
-  for(let r=0;r<shape.length;r++){
-    for(let c=0;c<shape[0].length;c++){
-      if(shape[r][c]) ctx.fillRect((col+c)*blockSize,(row+r)*blockSize,blockSize-2,blockSize-2);
-    }
-  }
-  ctx.globalAlpha=1;
 }
 
 function endDrag(e){
@@ -201,4 +170,14 @@ drawNextBlocks();
 loop();
 
 function restartGame(){
-  for(let r=0;r<ROWS;r++) for(let c=0;c<C
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) grid[r][c]=null;
+  score=0;
+  nextBlocks=[getRandomBlock(),getRandomBlock(),getRandomBlock()];
+  gameOver=false;
+  gameOverScreen.style.display="none";
+  drawNextBlocks();
+  loop();
+}
+</script>
+</body>
+</html>

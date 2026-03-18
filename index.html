@@ -3,202 +3,308 @@
 <head>
 <meta charset="UTF-8">
 <title>Oyun Sistemi</title>
+
 <style>
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  overflow: hidden;
-}
+body { margin:0; font-family:Arial; overflow:hidden; }
 
 #gameArea {
-  width: 100%;
-  height: 100vh;
-  position: relative;
-  background: url("WhatsApp Image 2026-03-18 at 13.50.32.jpeg");
-  background-size: cover;
-  background-position: center;
+  width:100%; height:100vh;
+  position:relative;
+  background:url("WhatsApp Image 2026-03-18 at 13.50.32.jpeg");
+  background-size:cover;
+  background-position:center;
 }
 
-/* Butonlar */
+/* BUTONLAR */
 #gameButtons {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 100;
+  position:absolute;
+  top:10px; right:10px;
+  z-index:100;
 }
-
 #gameButtons button {
-  margin-left: 5px;
-  padding: 8px 12px;
-  font-size: 16px;
-  cursor: pointer;
+  padding:8px 12px;
+  margin-left:5px;
+  cursor:pointer;
+  border:none;
+  border-radius:6px;
 }
 
-/* Dokunma oyunu */
-#tapGame {
-  width: 100%;
-  height: 100%;
-  position: absolute;
+/* ORTAK */
+.game {
+  position:absolute;
+  width:100%;
+  height:100%;
+  display:none;
+  color:white;
 }
 
-#tapGame #score, #tapGame #time, #tapGame #record {
-  font-size: 28px;
-  margin: 10px;
-  color: white;
-  text-shadow: 1px 1px 5px black;
+/* DOKUNMA */
+#tapGame div {
+  font-size:26px;
+  margin:10px;
+  text-shadow:1px 1px 5px black;
 }
 
-#tapGame #message {
-  font-size: 24px;
-  color: lime;
+.smallImage {
+  position:absolute;
+  width:60px;
+  animation:fade 0.5s forwards;
+}
+@keyframes fade {
+  0%{opacity:0;}
+  50%{opacity:1;}
+  100%{opacity:0;}
 }
 
-/* Sayı tahmin oyunu */
+/* SAYI */
 #numberGame {
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  display: none;
-  color: white;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
 }
 
-#numberGame input {
-  padding: 10px;
-  font-size: 20px;
-  width: 100px;
-  text-align: center;
+/* REFLEKS */
+#reflexGame {
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
 }
 
-#numberGame button {
-  padding: 8px 16px;
-  font-size: 18px;
-  margin-top: 10px;
-  cursor: pointer;
+#reflexBox {
+  width:200px;
+  height:200px;
+  background:red;
+  border-radius:10px;
+  cursor:pointer;
+}
+
+#reflexText {
+  margin-top:20px;
+  font-size:24px;
 }
 </style>
 </head>
+
 <body>
 
 <div id="gameArea">
 
-  <div id="gameButtons">
-    <button onclick="showTapGame()">Dokunma Oyunu</button>
-    <button onclick="showNumberGame()">Sayı Tahmin Oyunu</button>
-  </div>
+<!-- BUTONLAR -->
+<div id="gameButtons">
+  <button onclick="showTapGame()">Dokunma</button>
+  <button onclick="showNumberGame()">Tahmin</button>
+  <button onclick="showReflexGame()">Refleks</button>
+</div>
 
-  <!-- Dokunma Oyunu -->
-  <div id="tapGame">
-    <div id="score">Skor: 0</div>
-    <div id="time">Süre: 10</div>
-    <div id="record">Rekor: 0</div>
-    <div id="message"></div>
-  </div>
+<!-- DOKUNMA (FULL) -->
+<div id="tapGame" class="game">
+  <div id="score">Skor: 0</div>
+  <div id="time">Süre: 10</div>
+  <div id="record">Rekor: 0</div>
+  <div id="message"></div>
 
-  <!-- Sayı Tahmin Oyunu -->
-  <div id="numberGame">
-    <div>1-100 arası sayı tahmin et</div>
-    <div id="hak">Kalan Hak: 5</div>
-    <input type="number" id="ngInput">
-    <button onclick="checkGuess()">Tahmin Et</button>
-    <div id="ngMessage"></div>
+  <audio id="clickSound" src="universfield-playful-failure-310480 (1).mp3"></audio>
+
+  <div>
+    <button onclick="setTime(10)">10s</button>
+    <button onclick="setTime(20)">20s</button>
+    <button onclick="setTime(30)">30s</button>
   </div>
+</div>
+
+<!-- SAYI -->
+<div id="numberGame" class="game">
+  <div>Kalan Hak: <span id="hak"></span></div>
+  <input id="ngInput" type="number">
+  <button onclick="checkGuess()">Tahmin Et</button>
+  <div id="ngMessage"></div>
+</div>
+
+<!-- REFLEKS -->
+<div id="reflexGame" class="game">
+  <div id="reflexBox"></div>
+  <div id="reflexText">Hazır ol...</div>
+</div>
 
 </div>
 
 <script>
-// ===== Dokunma Oyunu =====
-let score = 0;
-let time = 10;
-let timer;
-let isGameOver = false;
 
-function startGame() {
-  score = 0;
-  time = 10;
-  isGameOver = false;
-  updateDisplay();
+// ================= DOKUNMA =================
+let score=0,time=10,timer,isGameOver=false,currentTimeSetting=10;
+let clickSound=document.getElementById("clickSound");
+
+function getRecordKey(t){ return "tapRecord_"+t; }
+function loadRecord(){
+  let r=localStorage.getItem(getRecordKey(currentTimeSetting))||0;
+  document.getElementById("record").innerText="Rekor: "+r;
+  return r;
+}
+let record=loadRecord();
+
+function updateDisplay(){
+  document.getElementById("score").innerText="Skor: "+score;
+  document.getElementById("time").innerText="Süre: "+time;
+  document.getElementById("record").innerText="Rekor: "+record;
+}
+
+function endGame(){
+  isGameOver=true;
+  document.getElementById("message").innerText="Bitti! Tekrar tıkla";
+  if(score>record){
+    record=score;
+    localStorage.setItem(getRecordKey(currentTimeSetting),record);
+  }
   clearInterval(timer);
-  timer = setInterval(() => {
-    if(time > 0){
-      time--;
-      updateDisplay();
-    } else {
-      document.getElementById("message").innerText = "Bitti!";
-      isGameOver = true;
-      clearInterval(timer);
-    }
+}
+
+function handleClick(){
+  if(activeGame!=="tap") return;
+
+  if(isGameOver){ startGame(); return; }
+
+  score++; updateDisplay();
+  clickSound.currentTime=0;
+  clickSound.play();
+
+  let img=document.createElement("img");
+  img.src="WhatsApp Image 2026-03-18 at 16.48.01.jpeg";
+  img.className="smallImage";
+
+  let area=document.getElementById("tapGame");
+  img.style.left=Math.random()*(area.clientWidth-60)+"px";
+  img.style.top=Math.random()*(area.clientHeight-60)+"px";
+
+  area.appendChild(img);
+  setTimeout(()=>img.remove(),500);
+}
+
+function startTimer(){
+  clearInterval(timer);
+  timer=setInterval(()=>{
+    if(time>0){ time--; updateDisplay(); }
+    else endGame();
   },1000);
 }
 
-function updateDisplay(){
-  document.getElementById("score").innerText = "Skor: " + score;
-  document.getElementById("time").innerText = "Süre: " + time;
+function startGame(){
+  score=0;
+  isGameOver=false;
+  document.getElementById("message").innerText="";
+  time=currentTimeSetting;
+  updateDisplay();
+  startTimer();
 }
 
-document.addEventListener("click", function(){
-  if(document.getElementById("tapGame").style.display !== "none"){
-    if(!isGameOver){
-      score++;
-      updateDisplay();
-    } else {
-      startGame();
-    }
-  }
-});
+function setTime(t){
+  currentTimeSetting=t;
+  record=loadRecord();
+  startGame();
+}
 
-// ===== Sayı Tahmin Oyunu =====
-let numberToGuess;
-let hak;
+document.addEventListener("click",handleClick);
 
-function startNumberGame(){
-  numberToGuess = Math.floor(Math.random()*100)+1;
-  hak = 5;
-  document.getElementById("hak").innerText = "Kalan Hak: " + hak;
-  document.getElementById("ngMessage").innerText = "";
-  document.getElementById("ngInput").value = "";
+
+// ================= SAYI =================
+let number,hak;
+
+function startNumber(){
+  number=Math.floor(Math.random()*100)+1;
+  hak=5;
+  document.getElementById("hak").innerText=hak;
+  document.getElementById("ngMessage").innerText="";
 }
 
 function checkGuess(){
-  let guess = parseInt(document.getElementById("ngInput").value);
-  let msg = document.getElementById("ngMessage");
+  if(hak<=0) return;
 
-  if(hak <= 0) return;
-
+  let g=parseInt(document.getElementById("ngInput").value);
   hak--;
-  document.getElementById("hak").innerText = "Kalan Hak: " + hak;
+  document.getElementById("hak").innerText=hak;
 
-  if(guess === numberToGuess){
-    msg.innerText = "🎉 Tebrikler bildin!";
-    hak = 0;
-  } else if(hak === 0){
-    msg.innerText = "❌ Kaybettiniz! Sayı: " + numberToGuess;
-  } else if(guess < numberToGuess){
-    msg.innerText = "Daha büyük!";
+  if(g===number){
+    document.getElementById("ngMessage").innerText="🎉 Tebrikler!";
+    hak=0;
+  } else if(hak===0){
+    document.getElementById("ngMessage").innerText="❌ Kaybettin! "+number;
+  } else if(g<number){
+    document.getElementById("ngMessage").innerText="Daha büyük";
   } else {
-    msg.innerText = "Daha küçük!";
+    document.getElementById("ngMessage").innerText="Daha küçük";
   }
 }
 
-// ===== Oyun Değiştirme =====
+
+// ================= REFLEKS =================
+let reflexStartTime;
+let waiting=true;
+
+function startReflex(){
+  let box=document.getElementById("reflexBox");
+  let text=document.getElementById("reflexText");
+
+  box.style.background="red";
+  text.innerText="Hazır ol...";
+  waiting=true;
+
+  let delay=Math.random()*3000+2000;
+
+  setTimeout(()=>{
+    box.style.background="green";
+    text.innerText="TIKLA!";
+    reflexStartTime=new Date().getTime();
+    waiting=false;
+  },delay);
+}
+
+document.getElementById("reflexBox").onclick=function(){
+  if(activeGame!=="reflex") return;
+
+  let text=document.getElementById("reflexText");
+
+  if(waiting){
+    text.innerText="Erken bastın!";
+    startReflex();
+  } else {
+    let time= new Date().getTime()-reflexStartTime;
+    text.innerText="Süren: "+time+" ms";
+    startReflex();
+  }
+};
+
+
+// ================= OYUN YÖNETİMİ =================
+let activeGame="";
+
+function hideAll(){
+  document.querySelectorAll(".game").forEach(g=>g.style.display="none");
+}
+
 function showTapGame(){
-  document.getElementById("tapGame").style.display = "block";
-  document.getElementById("numberGame").style.display = "none";
+  hideAll();
+  document.getElementById("tapGame").style.display="block";
+  activeGame="tap";
   startGame();
 }
 
 function showNumberGame(){
-  document.getElementById("tapGame").style.display = "none";
-  document.getElementById("numberGame").style.display = "flex";
-  startNumberGame();
+  hideAll();
+  document.getElementById("numberGame").style.display="flex";
+  activeGame="number";
+  startNumber();
 }
 
-// SAYFA AÇILINCA SADECE DOKUNMA OYUNU
-window.onload = function(){
-  showTapGame();
-};
+function showReflexGame(){
+  hideAll();
+  document.getElementById("reflexGame").style.display="flex";
+  activeGame="reflex";
+  startReflex();
+}
+
+window.onload=()=>showTapGame();
+
 </script>
 
 </body>

@@ -15,7 +15,7 @@
     height: 100vh;
   }
 
-  /* Sol kenar panel */
+  /* Sol panel */
   #menu {
     width: 150px;
     background: rgba(0,0,0,0.6);
@@ -32,7 +32,7 @@
     cursor: pointer;
   }
 
-  /* Orta oyun alanı */
+  /* Oyun alanı */
   #gameArea {
     flex: 1;
     display: flex;
@@ -77,10 +77,21 @@ let score = 0;
 let time = 10;
 let timer;
 let isGameOver = false;
+let currentTimeSetting = 10; // Seçili süre
 
-// Rekoru localStorage'dan al
-let record = localStorage.getItem("tapRecord") || 0;
-document.getElementById("record").innerText = "Rekor: " + record;
+// Her süre için ayrı rekor key
+function getRecordKey(timeSetting) {
+  return "tapRecord_" + timeSetting;
+}
+
+// Rekoru al
+function loadRecord() {
+  let record = localStorage.getItem(getRecordKey(currentTimeSetting)) || 0;
+  document.getElementById("record").innerText = "Rekor: " + record;
+  return record;
+}
+
+let record = loadRecord();
 
 function updateDisplay() {
   document.getElementById("score").innerText = "Skor: " + score;
@@ -93,10 +104,10 @@ function endGame() {
   document.getElementById("message").innerText = "Oyun bitti! Tıkla tekrar başlatmak için.";
   if (score > record) {
     record = score;
-    localStorage.setItem("tapRecord", record);
+    localStorage.setItem(getRecordKey(currentTimeSetting), record);
     updateDisplay();
   }
-  clearInterval(timer); // timer durdur
+  clearInterval(timer);
 }
 
 function handleClick() {
@@ -131,8 +142,10 @@ function startGame() {
 
 // Süre seçimi
 function setTime(t) {
+  currentTimeSetting = t;
   time = t;
-  startGame(); // süre değişince oyun sıfırlansın ve başlasın
+  record = loadRecord(); // Seçilen süreye ait rekoru yükle
+  startGame();
 }
 
 // Etkinlikler

@@ -1,8 +1,9 @@
-<!DOCTYPE html><html lang="tr">
+<!DOCTYPE html>
+<html lang="tr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Block Blast Gelişmiş</title>
+<title>Block Blast Kopya</title>
 <style>
 body { margin:0; display:flex; justify-content:center; align-items:center; height:100vh; background:#000; font-family:sans-serif; }
 #gameContainer { position:relative; }
@@ -18,38 +19,43 @@ canvas { display:block; background: url('WhatsApp Image 2026-03-18 at 13.50.32.j
 </head>
 <body>
 <div id="gameContainer">
-  <canvas id="game"></canvas>
+  <canvas id="game" width="400" height="400"></canvas>
   <div id="gameOverScreen">
     <div>GAME OVER</div>
     <button onclick="restartGame()">Yeniden Başlat</button>
   </div>
   <div id="nextBlocks"></div>
-</div><script>
+</div>
+
+<script>
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 const gameOverScreen = document.getElementById("gameOverScreen");
 const nextBlocksContainer = document.getElementById("nextBlocks");
 
-canvas.width = 400;
-canvas.height = 400;
+const ROWS=8, COLS=8;
+const grid=Array.from({length:ROWS},()=>Array(COLS).fill(null));
+const blockSize=canvas.width / COLS - 2;
 
-const ROWS = 8, COLS = 8;
-const grid = Array.from({length:ROWS},()=>Array(COLS).fill(null));
-const blockSize = canvas.width / COLS - 2;
-const colors = ["red","orange","yellow","green","blue","purple"];
+const colors = ["#e74c3c","#f1c40f","#2ecc71","#3498db","#9b59b6","#e67e22"];
 let score=0, highScore=localStorage.getItem("highscore")||0;
 let gameOver=false;
 let selectedBlock=null;
 let dragOffset={x:0,y:0};
 
-// Blok şekilleri (1-3 kare)
+// Orijinal Block Blast blok seti (19 şekil örneği)
+const blockShapes=[
+  [[1]], [[1,1]], [[1],[1]], [[1,1,1]], [[1],[1],[1]],
+  [[1,1],[1,0]], [[0,1],[1,1]], [[1,1,1],[0,1,0]], [[1,1],[1,1]],
+  [[1,1,0],[0,1,1]], [[0,1,1],[1,1,0]], [[1,0],[1,1]], [[1,1],[0,1]],
+  [[1,0,1],[1,1,1]], [[1,1,1,1]], [[1],[1],[1],[1]], [[1,1,0],[1,1,1]],
+  [[1,1,1],[1,0,1]], [[1,1],[1,0]]
+];
+
 function getRandomBlock(){
   const color = colors[Math.floor(Math.random()*colors.length)];
-  const shapes = [
-    [[1]], [[1,1]], [[1],[1]], [[1,1,1]], [[1],[1],[1]], [[1,1],[1,0]], [[0,1],[1,1]]
-  ];
-  const shape = shapes[Math.floor(Math.random()*shapes.length)];
-  return {color,shape};
+  const shape = blockShapes[Math.floor(Math.random()*blockShapes.length)];
+  return {color, shape};
 }
 
 // Başlangıç 3 blok
@@ -93,7 +99,6 @@ function checkClear(){
   if(score>highScore){ highScore=score; localStorage.setItem("highscore",highScore); }
 }
 
-// Blok yerleştirme kontrol
 function canPlaceBlock(block,row,col){
   const shape=block.shape;
   for(let r=0;r<shape.length;r++){
@@ -117,7 +122,6 @@ function placeBlock(block,row,col){
   checkClear();
 }
 
-// Alt blok seçimini çiz
 function drawNextBlocks(){
   nextBlocksContainer.innerHTML="";
   nextBlocks.forEach((block,i)=>{
@@ -127,18 +131,16 @@ function drawNextBlocks(){
     div.dataset.index=i;
     nextBlocksContainer.appendChild(div);
 
-    // Drag events
     div.addEventListener("mousedown", startDrag);
     div.addEventListener("touchstart", startDrag);
   });
 }
 
-// Drag mekanizması
 function startDrag(e){
   if(gameOver) return;
-  const index = parseInt(e.target.dataset.index);
-  selectedBlock = nextBlocks[index];
-  const rect = canvas.getBoundingClientRect();
+  const index=parseInt(e.target.dataset.index);
+  selectedBlock=nextBlocks[index];
+  const rect=canvas.getBoundingClientRect();
   const clientX = e.touches ? e.touches[0].clientX : e.clientX;
   const clientY = e.touches ? e.touches[0].clientY : e.clientY;
   dragOffset.x = clientX - rect.left;
@@ -152,22 +154,19 @@ function startDrag(e){
 
 function onDrag(e){
   if(!selectedBlock) return;
-  const rect = canvas.getBoundingClientRect();
+  const rect=canvas.getBoundingClientRect();
   const clientX = e.touches ? e.touches[0].clientX : e.clientX;
   const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-  draw(); // temizle
-  const col = Math.floor((clientX - rect.left)/blockSize);
-  const row = Math.floor((clientY - rect.top)/blockSize);
+  draw();
+  const col=Math.floor((clientX-rect.left)/blockSize);
+  const row=Math.floor((clientY-rect.top)/blockSize);
 
-  // geçici yerleştirme gösterimi
-  const shape = selectedBlock.shape;
+  const shape=selectedBlock.shape;
   ctx.globalAlpha=0.5;
   ctx.fillStyle=selectedBlock.color;
   for(let r=0;r<shape.length;r++){
     for(let c=0;c<shape[0].length;c++){
-      if(shape[r][c]){
-        ctx.fillRect((col+c)*blockSize,(row+r)*blockSize,blockSize-2,blockSize-2);
-      }
+      if(shape[r][c]) ctx.fillRect((col+c)*blockSize,(row+r)*blockSize,blockSize-2,blockSize-2);
     }
   }
   ctx.globalAlpha=1;
@@ -175,17 +174,16 @@ function onDrag(e){
 
 function endDrag(e){
   if(!selectedBlock) return;
-  const rect = canvas.getBoundingClientRect();
+  const rect=canvas.getBoundingClientRect();
   const clientX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
   const clientY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
-  const col = Math.floor((clientX - rect.left)/blockSize);
-  const row = Math.floor((clientY - rect.top)/blockSize);
+  const col=Math.floor((clientX-rect.left)/blockSize);
+  const row=Math.floor((clientY-rect.top)/blockSize);
   if(canPlaceBlock(selectedBlock,row,col)){
     placeBlock(selectedBlock,row,col);
     nextBlocks.splice(nextBlocks.indexOf(selectedBlock),1);
     nextBlocks.push(getRandomBlock());
   } else {
-    // Game Over
     gameOver=true;
     gameOverScreen.style.display="flex";
   }
@@ -197,19 +195,10 @@ function endDrag(e){
   window.removeEventListener("touchend", endDrag);
 }
 
-// Game Loop
 function loop(){ draw(); if(!gameOver) requestAnimationFrame(loop); }
+
 drawNextBlocks();
 loop();
 
 function restartGame(){
-  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) grid[r][c]=null;
-  score=0;
-  nextBlocks=[getRandomBlock(),getRandomBlock(),getRandomBlock()];
-  gameOver=false;
-  gameOverScreen.style.display="none";
-  drawNextBlocks();
-  loop();
-}
-</script></body>
-</html>
+  for(let r=0;r<ROWS;r++) for(let c=0;c<C
